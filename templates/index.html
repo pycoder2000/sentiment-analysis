@@ -817,19 +817,14 @@
 
     <!-- Vendor JS Files -->
     <script type="text/javascript">
-        var val = {
-            {
-                prediction_text
-            }
-        };
-        document.getElementById('posbar').value = val * 100;
-        document.getElementById('negbar').value = (1 - val) * 100;
-
-        function dis() {
-            document.getElementById("sub").value = 'Analysing...';
-            document.getElementById("sub").disabled = true;
+        var val = {{prediction_text}};
+        document.getElementById('posbar').value = val*100;
+        document.getElementById('negbar').value = (1-val)*100;
+        function dis(){
+          document.getElementById("sub").value = 'Analysing...';
+          document.getElementById("sub").disabled = true;
         }
-    </script>
+    </script>  
 
     <script src="{{ url_for('static',filename='bootstrap.bundle.js')}}"></script>
     <script src="{{ url_for('static',filename='aos.js')}}"></script>
