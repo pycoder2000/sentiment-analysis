@@ -1,114 +1,683 @@
 <!DOCTYPE html>
-<html >
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Sentiment Analysis</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto" rel='stylesheet' type='text/css'>
-  <style type="text/css">
-    body {
-      background: #232526;
-      background: -webkit-linear-gradient(to right, #414345, #232526); 
-      background: linear-gradient(to right, #414345, #232526);
-      font-family: Roboto;
-    }
-    .main{
-      margin-top: 150px;
-    }
-    .heading {
-      color: #EFEFEF;
-      font-size: 50px;
-    }
-    td {
-      padding: 20px;
-    }
-    .senti-label {
-      color: #fefefe;
-    }
-    input[type=text] {
-      width: 35%;
-      height: 40px;
-      border-radius: 10px;
-      padding: 5px 15px 5px 15px;
-      border: 0px;
-    }
-    input[type=submit] {
-      display: block;
-      font-family: 'Open Sans', Helvetica, Arial, sans-serif;
-      font-weight: 600;
-      font-size: .75em;
-      letter-spacing: 1px;
-      height: 38px;
-      width: 120px;
-      line-height: 38px;
-      overflow: hidden;
-      background: #4dbecf;
-      border-radius: 3px;
-      box-shadow: 0 15px 30px rgba(black,.1);
-      border: 0;
-      cursor: pointer;
-      transition: all .3s ease;
-    }
-    progress {
-      width: 400px;
-      height: 25px;
-      background: white;
-      border-radius: 45px;
-      padding: 2px;
-      box-shadow: 0 1px 0px 0 rgba(255, 255, 255, 0.2);
-    }
-    progress::-webkit-progress-bar {
-      background: white;
-      border-radius: 45px;
-      padding: 2px;
-      box-shadow: 0 1px 0px 0 rgba(255, 255, 255, 0.2);
-    }
-    progress::-webkit-progress-value{
-      border-radius: 25px;
-      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.4); 
-      background-size: 250px 25px;
-      transition: width 2s ease-in-out;
-    }
-    .pos::-webkit-progress-value{
-      background-color: green;
-    }
-    .neg::-webkit-progress-value{
-      background-color: red;
-    }
-  </style>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Sentiment Analyzer</title>
+    <meta content="A simple sentiment analysis application made using Tensorflow Keras, NLTK, TfIDF vector" name="description">
+
+    <meta content="Sentiment Analysis, Natural Language Processing, Parth Desai" name="keywords">
+
+    <!-- Favicons -->
+    <link href="{{ url_for('static',filename='favicon.png')}}" rel="icon">
+    <link href="{{ url_for('static',filename='apple-touch-icon.png')}}" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto" rel='stylesheet' type='text/css'>
+
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static',filename='bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='bootstrap-icons.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='aos.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='remixicon.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='swiper-bundle.min.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='glightbox.min.css')}}" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="{{ url_for('static',filename='style.css')}}" rel="stylesheet">
 </head>
 
 <body>
- <div class="main" align="center">
-	<h1 class="heading">Sentiment Analysis</h1>
-    <form action="{{ url_for('predict')}}" method="post">
-    	<input type="text" name="input" placeholder="Enter text to analyse" required="required" /><br><br>
-      <input type="submit" value="Analyse" id="sub">
-    </form>
-  <br>
-  <br>
-  
-  <table>
-    <tr>
-      <td class="senti-label">Positive Sentiment</td>
-      <td><progress min=0 max=100 value=100 id="posbar" class="pos"></progress></td>
-    </tr>
-    <tr>
-      <td class="senti-label">Negative Sentiment</td>
-      <td><progress min=0 max=100 value=100 id="negbar" class="neg"></progress></td>
-    </tr>
-  </table>
- </div>
 
-<script type="text/javascript">
-    var val = {{prediction_text}};
-    document.getElementById('posbar').value = val*100;
-    document.getElementById('negbar').value = (1-val)*100;
-    function dis(){
-      document.getElementById("sub").value = 'Analysing...';
-      document.getElementById("sub").disabled = true;
-    }
-</script>      
-</script>
+    <!-- ======= Header ======= -->
+    <header id="header" class="header fixed-top">
+        <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+
+            <a href="{{ url_for('home')}}" class="logo d-flex align-items-center">
+                <img src="{{ url_for('static',filename='logo.png')}}" alt="Sentiment Analyzer">
+                <span>Sentiment Analyzer</span>
+            </a>
+
+            <nav id="navbar" class="navbar">
+                <ul>
+                    <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
+                    <li><a class="nav-link scrollto" href="#about">About</a></li>
+                    <li><a class="nav-link scrollto" href="#clients">Tech Stack</a></li>
+                    <li><a class="nav-link scrollto" href="#portfolio">Dataset</a></li>
+                    <li><a class="nav-link scrollto" href="#recent-blog-posts">Reference</a></li>
+                    <li><a class="nav-link scrollto" href="#team">Team</a></li>
+                    <li><a class="getstarted scrollto" href="#services">Start Analyzing</a></li>
+                </ul>
+                <i class="bi bi-list mobile-nav-toggle"></i>
+            </nav>
+            <!-- .navbar -->
+
+        </div>
+    </header>
+    <!-- End Header -->
+
+    <!-- ======= Hero Section ======= -->
+    <section id="hero" class="hero d-flex align-items-center" style="background: url('{{ url_for('static',filename='hero-bg.png')}}') top center no-repeat; width: 100%; height: 100vh; background-size: cover;">
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 d-flex flex-column justify-content-center">
+                    <h1 data-aos="fade-up">This is a web app which can be used to analyze users' sentiments across different platforms using REST Apis.</h1>
+                    <h2 data-aos="fade-up" data-aos-delay="400">Made with Python, Flask, HTML, Javascript and deployed using Vercel.</h2>
+                    <div data-aos="fade-up" data-aos-delay="600">
+                        <div class="text-center text-lg-start">
+                            <a href="#services" class="btn-get-started scrollto d-inline-flex align-items-center justify-content-center align-self-center">
+                                <span>Start Analyzing</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 hero-img" data-aos="zoom-out" data-aos-delay="200">
+                    <img src="{{ url_for('static',filename='hero-img.png')}}" class="img-fluid" alt="">
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- End Hero -->
+
+    <main id="main">
+        <!-- ======= About Section ======= -->
+        <section id="about" class="about">
+
+            <div class="container" data-aos="fade-up">
+                <div class="row gx-0">
+
+                    <div class="col-lg-6 d-flex flex-column justify-content-center" data-aos="fade-up" data-aos-delay="200">
+                        <div class="content">
+                            <h3>About the project</h3>
+                            <h2><strong>Text Classification</strong> is a process involved in Sentiment Analysis. It is classification of peoples opinion or expressions into different sentiments.</h2>
+                            <p>
+                                Sentiment Analysis is the automated process of analyzing text data and sorting it into sentiments positive, negative or neutral.Twitter Sentiment Analysis Systems allow you to sort large sets of tweets and detect the polarity of each statement automatically. This project used the following packages :
+                                <ul>
+                                    <li>
+                                        Tensorflow Keras
+                                    </li>
+                                    <li>
+                                        Natural Language Toolkit (NLTK)
+                                    </li>
+                                    <li>
+                                        TfidfVectorizer
+                                    </li>
+                                </ul>
+                            </p>
+                            <p>
+                                The model was trained using tweets from <a href="https://www.kaggle.com/kazanova/sentiment140">Sentiment140 dataset with 1.6 million tweets.</a> It contains 1,600,000 tweets extracted using the Twitter API. The tweets have been annotated (0 = negative, 4 = positive) and they can be used to detect sentiment.
+                            </p>
+                            <div class="text-center text-lg-start">
+                                <a href="https://github.com/pycoder2000/sentiment-analysis" class="btn-read-more d-inline-flex align-items-center justify-content-center align-self-center">
+                                    <span>See the code</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
+                        <img src="{{ url_for('static',filename='nlp.png')}}" class="img-fluid" alt="">
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+        <!-- End About Section -->
+
+        <!-- ======= Clients Section ======= -->
+        <section id="clients" class="clients">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>Tech Stack</h2>
+                    <p>Technologies we used</p>
+                </header>
+
+                <div class="clients-slider swiper">
+                    <div class="swiper-wrapper align-items-center">
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='python.svg')}}" class="img-fluid" alt="Python"></div>
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='django.svg')}}" class="img-fluid" alt="Django"></div>
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='flask.svg')}}" class="img-fluid" alt="Flask"></div>
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='html-5.svg')}}" class="img-fluid" alt="HTML"></div>
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='javascript.svg')}}" class="img-fluid" alt="Javascript"></div>
+                        <div class="swiper-slide"><img src="{{ url_for('static',filename='vercel.svg')}}" class="img-fluid" alt="Vercel"></div>
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+
+        </section>
+        <!-- End Clients Section -->
+
+        <!-- ======= Services Section ======= -->
+        <section id="services" class="services">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>Execution</h2>
+                    <p>Sentiment Analyzer</p>
+                </header>
+
+                <div class="form-group" align="center">
+                  <label for="exampleInputEmail1">Enter text to Analyze</label>
+                  <br>
+                  <br>
+                  <form action="{{ url_for('predict')}}" method="post">
+    	              <input type="text" name="input" placeholder="Enter Here" class="form-control my-input" id="exampleFormControlTextarea1" rows="3" required="required" />
+                    <br>
+                    <br>
+                    <input type="submit" value="Analyse" class="btn btn-primary btn-sm" id="sub">
+                  </form>
+                  <br>
+                  <br>
+                  
+                  <table align="center">
+                    <tr>
+                      <td class="senti-label">Positive Sentiment</td>
+                      <td><progress min=0 max=100 value=100 id="posbar" class="pos"></progress></td>
+                    </tr>
+                    <tr>
+                      <td class="senti-label">Negative Sentiment</td>
+                      <td><progress min=0 max=100 value=100 id="negbar" class="neg"></progress></td>
+                    </tr>
+                  </table>
+                </div>
+
+            </div>
+
+        </section>
+        <!-- End Services Section -->
+
+        <!-- ======= F.A.Q Section ======= -->
+        <section id="faq" class="faq">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>F.A.Q</h2>
+                    <p>Frequently Asked Questions</p>
+                </header>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <!-- F.A.Q List 1-->
+                        <div class="accordion accordion-flush" id="faqlist1">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-content-1">
+                    Non consectetur a erat nam at lectus urna duis?
+                  </button>
+                                </h2>
+                                <div id="faq-content-1" class="accordion-collapse collapse" data-bs-parent="#faqlist1">
+                                    <div class="accordion-body">
+                                        Feugiat pretium nibh ipsum consequat. Tempus iaculis urna id volutpat lacus laoreet non curabitur gravida. Venenatis lectus magna fringilla urna porttitor rhoncus dolor purus non.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-content-2">
+                    Feugiat scelerisque varius morbi enim nunc faucibus a pellentesque?
+                  </button>
+                                </h2>
+                                <div id="faq-content-2" class="accordion-collapse collapse" data-bs-parent="#faqlist1">
+                                    <div class="accordion-body">
+                                        Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices. Fringilla phasellus faucibus scelerisque eleifend donec pretium. Est pellentesque elit ullamcorper dignissim. Mauris ultrices eros in
+                                        cursus turpis massa tincidunt dui.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-content-3">
+                    Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi?
+                  </button>
+                                </h2>
+                                <div id="faq-content-3" class="accordion-collapse collapse" data-bs-parent="#faqlist1">
+                                    <div class="accordion-body">
+                                        Eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci. Faucibus pulvinar elementum integer enim. Sem nulla pharetra diam sit amet nisl suscipit. Rutrum tellus pellentesque eu tincidunt. Lectus urna duis convallis convallis tellus. Urna
+                                        molestie at elementum eu facilisis sed odio morbi quis
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+
+                        <!-- F.A.Q List 2-->
+                        <div class="accordion accordion-flush" id="faqlist2">
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2-content-1">
+                    Ac odio tempor orci dapibus. Aliquam eleifend mi in nulla?
+                  </button>
+                                </h2>
+                                <div id="faq2-content-1" class="accordion-collapse collapse" data-bs-parent="#faqlist2">
+                                    <div class="accordion-body">
+                                        Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices. Fringilla phasellus faucibus scelerisque eleifend donec pretium. Est pellentesque elit ullamcorper dignissim. Mauris ultrices eros in
+                                        cursus turpis massa tincidunt dui.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2-content-2">
+                    Tempus quam pellentesque nec nam aliquam sem et tortor consequat?
+                  </button>
+                                </h2>
+                                <div id="faq2-content-2" class="accordion-collapse collapse" data-bs-parent="#faqlist2">
+                                    <div class="accordion-body">
+                                        Molestie a iaculis at erat pellentesque adipiscing commodo. Dignissim suspendisse in est ante in. Nunc vel risus commodo viverra maecenas accumsan. Sit amet nisl suscipit adipiscing bibendum est. Purus gravida quis blandit turpis cursus in
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2-content-3">
+                    Varius vel pharetra vel turpis nunc eget lorem dolor?
+                  </button>
+                                </h2>
+                                <div id="faq2-content-3" class="accordion-collapse collapse" data-bs-parent="#faqlist2">
+                                    <div class="accordion-body">
+                                        Laoreet sit amet cursus sit amet dictum sit amet justo. Mauris vitae ultricies leo integer malesuada nunc vel. Tincidunt eget nullam non nisi est sit amet. Turpis nunc eget lorem dolor sed. Ut venenatis tellus in metus vulputate eu scelerisque. Pellentesque
+                                        diam volutpat commodo sed egestas egestas fringilla phasellus faucibus. Nibh tellus molestie nunc non blandit massa enim nec.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- End F.A.Q Section -->
+
+        <!-- ======= Portfolio Section ======= -->
+        <section id="portfolio" class="portfolio">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>Dataset</h2>
+                    <p>Insights from Dataset</p>
+                </header>
+
+                <div class="row" data-aos="fade-up" data-aos-delay="100">
+                    <div class="col-lg-12 d-flex justify-content-center">
+                        <ul id="portfolio-flters">
+                            <li data-filter="*" class="filter-active">All</li>
+                            <li data-filter=".filter-app">App</li>
+                            <li data-filter=".filter-card">Card</li>
+                            <li data-filter=".filter-web">Web</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row gy-4 portfolio-container" data-aos="fade-up" data-aos-delay="200">
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-app">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-1.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Dataset Distribution</h4>
+                                <p>This is the distribution of the labels of dataset</p>
+                                <div class="portfolio-links">
+                                    <a href="{{ url_for('static',filename='portfolio-1.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Dataset Distribution"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-web">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-4.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Classification Report</h4>
+                                <p>Classification Report : The accuracy is 80%</p>
+                                <div class="portfolio-links">
+                                     <a href="{{ url_for('static',filename='portfolio-4.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Classification Report"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-app">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-3.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Confusion Matrix</h4>
+                                <p>Confusion Matrix</p>
+                                <div class="portfolio-links">
+                                    <a href="{{ url_for('static',filename='portfolio-3.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Confusion Matrix"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-card">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-2.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Model Accuracy</h4>
+                                <p>Learning Curve of loss and accuracy of the model on each epoch</p>
+                                <div class="portfolio-links">
+                                    <a href="{{ url_for('static',filename='portfolio-2.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Model Accuracy"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-web">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-5.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Word-Cloud</h4>
+                                <p>Word-Cloud for Negative tweets.</p>
+                                <div class="portfolio-links">
+                                    <a href="{{ url_for('static',filename='portfolio-5.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Word-Cloud"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-app">
+                        <div class="portfolio-wrap">
+                            <img src="{{ url_for('static', filename='portfolio-6.png')}}" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Word-Cloud</h4>
+                                <p>Word-Cloud for Positive tweets.</p>
+                                <div class="portfolio-links">
+                                    <a href="{{ url_for('static',filename='portfolio-6.png')}}" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Word-Cloud"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-card">
+                        <div class="portfolio-wrap">
+                            <img src="assets/img/portfolio/portfolio-7.jpg" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Card 1</h4>
+                                <p>Card</p>
+                                <div class="portfolio-links">
+                                    <a href="assets/img/portfolio/portfolio-7.jpg" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Card 1"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-card">
+                        <div class="portfolio-wrap">
+                            <img src="assets/img/portfolio/portfolio-8.jpg" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Card 3</h4>
+                                <p>Card</p>
+                                <div class="portfolio-links">
+                                    <a href="assets/img/portfolio/portfolio-8.jpg" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Card 3"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 portfolio-item filter-web">
+                        <div class="portfolio-wrap">
+                            <img src="assets/img/portfolio/portfolio-9.jpg" class="img-fluid" alt="">
+                            <div class="portfolio-info">
+                                <h4>Web 3</h4>
+                                <p>Web</p>
+                                <div class="portfolio-links">
+                                    <a href="assets/img/portfolio/portfolio-9.jpg" data-gallery="portfolioGallery" class="portfokio-lightbox" title="Web 3"><i class="bi bi-plus"></i></a>
+                                    <a href="#" title="More Details"><i class="bi bi-link"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- End Portfolio Section -->
+
+        <!-- ======= Counts Section ======= -->
+        <section id="counts" class="counts">
+            <div class="container" data-aos="fade-up">
+
+                <div class="row gy-4">
+
+                    <div class="col-lg-3 col-md-6">
+                        <div class="count-box">
+                            <i class="bi bi-emoji-smile"></i>
+                            <div>
+                                <span data-purecounter-start="0" data-purecounter-end="30369" data-purecounter-duration="1" class="purecounter"></span>
+                                <p>Vocab Size</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <div class="count-box">
+                            <i class="bi bi-journal-richtext" style="color: #ee6c20;"></i>
+                            <div>
+                                <span data-purecounter-start="0" data-purecounter-end="1600000" data-purecounter-duration="1" class="purecounter"></span>
+                                <p>Dataset Rows</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <div class="count-box">
+                            <i class="bi bi-headset" style="color: #15be56;"></i>
+                            <div>
+                                <span data-purecounter-start="0" data-purecounter-end="1280000" data-purecounter-duration="1" class="purecounter"></span>
+                                <p>Train Data Size</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6">
+                        <div class="count-box">
+                            <i class="bi bi-people" style="color: #bb0852;"></i>
+                            <div>
+                                <span data-purecounter-start="0" data-purecounter-end="320000" data-purecounter-duration="1" class="purecounter"></span>
+                                <p>Test Data Size</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+        <!-- End Counts Section -->
+
+        <!-- ======= Recent Blog Posts Section ======= -->
+        <section id="recent-blog-posts" class="recent-blog-posts">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>Reference</h2>
+                    <p>Papers and Code we referred while building this</p>
+                </header>
+
+                <div class="row">
+
+                    <div class="col-lg-4">
+                        <div class="post-box">
+                            <div class="post-img"><img src="{{ url_for('static',filename='blog-1.png')}}" class="img-fluid" alt=""></div>
+                            <span class="post-date">Reference Paper</span>
+                            <h3 class="post-title">Official paper detailing the approach</h3>
+                            <a href="https://www-cs.stanford.edu/people/alecmgo/papers/TwitterDistantSupervision09.pdf" class="readmore stretched-link mt-auto"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="post-box">
+                            <div class="post-img"><img src="{{ url_for('static',filename='blog-2.png')}}" class="img-fluid" alt=""></div>
+                            <span class="post-date">Reference Notebook</span>
+                            <h3 class="post-title">Reference Notebook for this project found on Kaggle</h3>
+                            <a href="https://www.kaggle.com/paoloripamonti/twitter-sentiment-analysis" class="readmore stretched-link mt-auto"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="post-box">
+                            <div class="post-img"><img src="{{ url_for('static',filename='blog-3.png')}}" class="img-fluid" alt=""></div>
+                            <span class="post-date">Reference Blog</span>
+                            <h3 class="post-title">Reference blog which was based on implementation of the research paper</h3>
+                            <a href="http://www.laurentluce.com/posts/twitter-sentiment-analysis-using-python-and-nltk/" class="readmore stretched-link mt-auto"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- End Recent Blog Posts Section -->
+
+        <!-- ======= Team Section ======= -->
+        <section id="team" class="team">
+
+            <div class="container" data-aos="fade-up">
+
+                <header class="section-header">
+                    <h2>Team</h2>
+                    <p>Our team</p>
+                </header>
+
+                <div class="row gy-4">
+
+                    <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+                        <div class="member">
+                            <div class="member-img">
+                                <img src="{{ url_for('static',filename='team-2.png')}}" class="img-fluid" alt="Parth Desai">
+                                <div class="social">
+                                    <a href=""><i class="bi bi-twitter"></i></a>
+                                    <a href=""><i class="bi bi-facebook"></i></a>
+                                    <a href=""><i class="bi bi-instagram"></i></a>
+                                    <a href=""><i class="bi bi-linkedin"></i></a>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <h4>Parth Desai</h4>
+                                <span>18BCE150</span>
+                                <p>
+                                    Created the Flask App<br>
+                                    Designed and coded the Website<br>
+                                    Contributor in creating the training module<br>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="300">
+                        <div class="member">
+                            <div class="member-img">
+                                <img src="{{ url_for('static',filename='team-3.png')}}" class="img-fluid" alt="Kushal Rajput">
+                                <div class="social">
+                                    <a href=""><i class="bi bi-twitter"></i></a>
+                                    <a href=""><i class="bi bi-facebook"></i></a>
+                                    <a href=""><i class="bi bi-instagram"></i></a>
+                                    <a href=""><i class="bi bi-linkedin"></i></a>
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <h4>Kushal Rajput</h4>
+                                <span>19BCE521</span>
+                                <p>
+                                    In charge of Literature Survey<br>
+                                    Cleaned the dataset and prepared it for pre-processing<br>
+                                    Contributor in creating the training module<br>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="400">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- End Team Section -->
+
+    </main>
+    <!-- End #main -->
+
+    <!-- ======= Footer ======= -->
+    <footer id="footer" class="footer">
+        <div class="container">
+            <div class="copyright">
+                &copy; Copyright <strong><span>18BCE150</span></strong>. All Rights Reserved
+            </div>
+            <div class="credits">
+                Designed by <a href="https://github.com/pycoder2000">Parth Desai</a>
+            </div>
+        </div>
+    </footer>
+    <!-- End Footer -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script type="text/javascript">
+      var val = {{prediction_text}};
+      document.getElementById('posbar').value = val*100;
+      document.getElementById('negbar').value = (1-val)*100;
+      function dis(){
+        document.getElementById("sub").value = 'Analysing...';
+        document.getElementById("sub").disabled = true;
+      }
+    </script>   
+
+    <script src="{{ url_for('static',filename='bootstrap.bundle.js')}}"></script>
+    <script src="{{ url_for('static',filename='aos.js')}}"></script>
+    <script src="{{ url_for('static',filename='validate.js')}}"></script>
+    <script src="{{ url_for('static',filename='swiper-bundle.min.js')}}"></script>
+    <script src="{{ url_for('static',filename='purecounter.js')}}"></script>
+    <script src="{{ url_for('static',filename='isotope.pkgd.min.js')}}"></script>
+    <script src="{{ url_for('static',filename='glightbox.min.js')}}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="{{ url_for('static',filename='main.js')}}"></script>
 </body>
+
 </html>
