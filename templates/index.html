@@ -164,14 +164,11 @@
 
         <!-- ======= Services Section ======= -->
         <section id="services" class="services">
-
             <div class="container" data-aos="fade-up">
-
                 <header class="section-header">
                     <h2>Execution</h2>
                     <p>Sentiment Analyzer</p>
                 </header>
-
                 <div class="form-group" align="center">
                     <label for="exampleInputEmail1">Enter text to Analyze</label>
                     <br>
@@ -505,6 +502,7 @@
                                     <li class="list-group-item">The ML algorithm, trained by the training data, performs the analysis of the given data and provides the user with patterns and polarity.</li>
                                     <li class="list-group-item">Firstly, the program retrieves the data from twitter’s database, after searching the it from the keyword.</li>
                                     <li class="list-group-item">Then, the data is sent for preprocessing before sending it out for storage in warehouse.</li>
+                                    <li class="list-group-item">The data is then aggregated as well as analyzed. Then, a final report as well as the data analysis is generated.</li>
                                 </ol>
                             </div>
                             <!-- End Tab 3 Content -->
@@ -824,7 +822,17 @@
           document.getElementById("sub").value = 'Analysing...';
           document.getElementById("sub").disabled = true;
         }
-    </script>  
+    </script>
+
+    <script>
+    function jumpToHash(hash){
+        if (hash){
+            var url = location.href;
+            location.href = "#services";
+        }
+    }
+    jumpToHash({{ anchor }});
+    </script>
 
     <script src="{{ url_for('static',filename='bootstrap.bundle.js')}}"></script>
     <script src="{{ url_for('static',filename='aos.js')}}"></script>

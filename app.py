@@ -37,7 +37,7 @@ def predict():
     inp = vect.transform([inp]).toarray().reshape(1,1,2500)
     output = model.predict(inp)[0]
 
-    return render_template('index.html', prediction_text='{}'.format(output[0]))
+    return render_template('index.html', prediction_text='{}'.format(output[0]), anchor="services")
 
 if __name__ == "__main__":
     app.run(debug=True)
