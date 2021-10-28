@@ -2507,3 +2507,13 @@ progress::-webkit-progress-value {
 .neg::-webkit-progress-value {
     background-color: red;
 }
+
+.poscount {
+    color: green;
+    font-family: 'Signika', sans-serif;
+}
+
+.negcount {
+    color: red;
+    font-family: 'Signika', sans-serif;
+}

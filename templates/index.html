@@ -186,10 +186,12 @@
                         <tr>
                             <td class="senti-label">Positive Sentiment</td>
                             <td><progress min=0 max=100 value=100 id="posbar" class="pos"></progress></td>
+                            <td><p id="poscount" class="poscount"></p></td>
                         </tr>
                         <tr>
                             <td class="senti-label">Negative Sentiment</td>
                             <td><progress min=0 max=100 value=100 id="negbar" class="neg"></progress></td>
+                            <td><p id="negcount" class="negcount"></p></td>
                         </tr>
                     </table>
                 </div>
@@ -816,8 +818,11 @@
     <!-- Vendor JS Files -->
     <script type="text/javascript">
         var val = {{prediction_text}};
+        var unval = 1-val;
         document.getElementById('posbar').value = val*100;
         document.getElementById('negbar').value = (1-val)*100;
+        document.getElementById('poscount').innerHTML = val.toFixed(5)*100 + " %";
+        document.getElementById('negcount').innerHTML = unval.toFixed(5)*100 + " %";
         function dis(){
           document.getElementById("sub").value = 'Analysing...';
           document.getElementById("sub").disabled = true;
